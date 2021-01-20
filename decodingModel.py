@@ -5,19 +5,19 @@ from keras.applications.vgg16 import VGG16
 
 
 def VggModel():
-	vgg = VGG16()
-	feature_extract_model = Sequential()
-	for i in vgg.layers[0:19]:
-    	i.trainable = False
-    	feature_extract_model.add(i)
-	print(feature_extract_model.summary())
-	return feature_extract_model
+  vgg = VGG16()
+  feature_extract_model = Sequential()
+  for i in vgg.layers[0:19]:
+    i.trainable = False
+    feature_extract_model.add(i)
+  print(feature_extract_model.summary())
+  return feature_extract_model
 
 
 
 def model():
 	#Build model take Vgg output and return model output
-	Inp = Input(shape(7 , 7 , 512))
+	Inp = Input(shape = (7 , 7 , 512))
 	# Decoder Model
 	x = Conv2D(128, (3,3), activation='relu', padding='same' )(Inp)
 	x = UpSampling2D((2, 2))(x)
