@@ -15,7 +15,7 @@ from keras.models import load_model
 
 
 
-def PrepareData(datapath , save_file , target_size , batch_size , ):
+def PrepareData(datapath , save_file , target_size , batch_size , apply = feature_extract_model):
 	path = "/content/data"
 	train_datagen = ImageDataGenerator(rescale = 1. / 255)
 	train = train_datagen.flow_from_directory(path, target_size = target_size , batch_size = batch_size , class_mode=None)
