@@ -1,6 +1,7 @@
 # preprocessing
 import os
 import numpy as np
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 from keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img
 from skimage.color import rgb2lab, lab2rgb , gray2rgb
@@ -15,28 +16,25 @@ from keras.models import load_model
 
 
 
-def PrepareData(datapath , save_file , target_size , batch_size , apply = feature_extract_model):
-	path = "/content/data"
-	train_datagen = ImageDataGenerator(rescale = 1. / 255)
-	train = train_datagen.flow_from_directory(path, target_size = target_size , batch_size = batch_size , class_mode=None)
-	for file in tqdm(train[0]):
-
-	    x = rgb2lab(img_arr_rgb) #make input confirm to VGG16 input format
-	    data = dict()
-	    data["y_color_lab"] = x[: , : , 1: ] /128
-	    data['X_gray_lab'] =  x[: , : , 0:1] 
-	    x = gray2rgb(x[: , : , 0])
-	    x = x.reshape((1 ,) + x.shape)
-	    fc2_features = feature_extract_model.predict(x) 
-	    data['X_features'] = fc2_features[0]
-
-	    file_save_name = "/content/processed/" + file.split('.')[0] +'preproc.pk' 
-	      
-	    fid = open(file_save_name, 'wb')
-	    dump(data, fid)
-	    fid.close()
-	print("Done")
-
+def PrepareData(datapath , save_file , target_size , batch_size , feature_extract_model):
+  path = "/content/data"
+  index = 0
+  train_datagen = ImageDataGenerator(rescale = 1. / 255)
+  train = train_datagen.flow_from_directory(path, target_size = target_size , batch_size = batch_size , class_mode=None)
+  for img in tqdm(train[0]):
+    x = rgb2lab(img) #make input confirm to VGG16 input format
+    data = dict()
+    data["y_color_lab"] = x[: , : , 1: ] /128
+    data['X_gray_lab'] =  x[: , : , 0:1] 
+    x = gray2rgb(x[: , : , 0])
+    x = x.reshape((1 ,) + x.shape)
+    fc2_features = feature_extract_model.predict(x) 
+    data['X_features'] = fc2_features[0]
+    file_save_name = "/content/processed/" + str(index) +'preproc.pk' 
+    index = index + 1   
+    fid = open(file_save_name, 'wb')
+    dump(data, fid)
+    fid.close()
 
 def show_images(X , width , hight , columns , rows):
   fig = plt.figure(figsize=(width , hight))
@@ -79,31 +77,23 @@ def test_images(path , shape , batch_size , model , feature_extract_model):
 
 
 def data_generator_baseline(training_dir, num_train_samples, batch_size):
-    """
-    Function to generate batch size (images , targets)
-    training_dir : dir of files with pk extension
-    num_train_samples : number of images
-    batch_size : nums of images in one feed
-    """
-      current_batch_size = 0
+  current_batch_size = 0
       # loop through images for ever
-      while 1:
-      	# list of names of files in dir
-        files = os.listdir(training_dir)
-        for file_idx in range(num_train_samples): 
-            # retrieve the photo feature
-            if current_batch_size == 0:
-                X1, Y = list() , list()
-            file = training_dir + '/' + files[file_idx] # 1.pk
-            fid = open(file, 'rb')
-            data = load(fid)
-            fid.close()
-            features  = data['X_features'] 
-            img_color = data['y_color_lab'] 
-            X1.append(features)
-            Y.append(img_color)
-            current_batch_size += 1
-            if current_batch_size == batch_size:
-                current_batch_size = 0
-                yield (np.array(X1), np.array(Y))
-
+  while 1:
+    files = os.listdir(training_dir)
+    for file_idx in range(num_train_samples): 
+    # retrieve the photo feature
+      if current_batch_size == 0:
+        X1, Y = list() , list()
+      file = training_dir + '/' + files[file_idx] # 1.pk
+      fid = open(file, 'rb')
+      data = load(fid)
+      fid.close()
+      features  = data['X_features'] 
+      img_color = data['y_color_lab'] 
+      X1.append(features)
+      Y.append(img_color)
+      current_batch_size += 1
+      if current_batch_size == batch_size:
+        current_batch_size = 0
+        yield (np.array(X1), np.array(Y))
